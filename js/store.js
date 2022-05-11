@@ -21,13 +21,11 @@ export const createTodoStore = (localStorageKey) => {
     }
 
     function all(viewFilter) {
-        if (viewFilter === 'active') {
-            return todos.filter(todo => !todo.completed);
+        switch (viewFilter) {
+            case 'active': return todos.filter(todo => !todo.completed);
+            case 'completed': return todos.filter(todo => todo.completed);
+            default: return todos;
         }
-        if (viewFilter === 'completed') {
-            return todos.filter(todo => todo.completed);
-        }
-        return todos;
     }
 
     function hasCompleted() {
