@@ -5,7 +5,6 @@ const todoStore = createTodoStore('todo-vanillajs-2022');
 
 const createApp = rootElement => {
     'use strict';
-
     const $input = rootElement.querySelector('.new-todo');
     const $list = rootElement.querySelector('.todo-list');
     const $count = rootElement.querySelector('.todo-count');
@@ -14,10 +13,7 @@ const createApp = rootElement => {
     const $main = rootElement.querySelector('.main');
     const $clear = rootElement.querySelector('.clear-completed');
     const $filters = rootElement.querySelector('.filters');
-
-    let filter = getURLHash()
-
-    todoStore.addEventListener('save', render);
+    let filter = getURLHash();
 
     window.addEventListener('hashchange', () => {
         filter = getURLHash();
@@ -31,26 +27,11 @@ const createApp = rootElement => {
         }
     });
 
-    $toggleAll.addEventListener('click', e => {
-        todoStore.toggleAll();
-    });
-
-    $clear.addEventListener('click', e => {
-        todoStore.clearCompleted();
-    });
-
-    render();
+    $toggleAll.addEventListener('click', e => { todoStore.toggleAll(); });
+    $clear.addEventListener('click', e => { todoStore.clearCompleted(); });
 
     function addTodo(todo) {
-        todoStore.add({ title: todo, completed: false, id: "id_" + Date.now() });
-    }
-
-    function removeTodo(todo) {
-        todoStore.remove(todo);
-    }
-
-    function toggleTodo(todo) {
-        todoStore.toggle(todo);
+        todoStore.add({ title: todo, completed: false, id: 'id_' + Date.now() });
     }
 
     function editingTodo(todo, li) {
@@ -65,8 +46,7 @@ const createApp = rootElement => {
 
     function createTodoItem(todo) {
         const li = document.createElement('li');
-        if (todo.completed) { li.classList.add('completed'); }
-
+        if (todo.completed) li.classList.add('completed');
         li.innerHTML = `
             <div class="view">
                 <input class="toggle" type="checkbox" ${todo.completed ? 'checked' : ''}>
@@ -74,13 +54,11 @@ const createApp = rootElement => {
                 <button class="destroy"></button>
             </div>
             <input class="edit">
-		`;
-
+        `;
         li.querySelector('label').textContent = todo.title;
         li.querySelector('.edit').value = todo.title;
-
-        addEvent(li, '.destroy', 'click', () => removeTodo(todo, li));
-        addEvent(li, '.toggle', 'click', () => toggleTodo(todo, li));
+        addEvent(li, '.destroy', 'click', () => todoStore.remove(todo));
+        addEvent(li, '.toggle', 'click', () => todoStore.toggle(todo));
         addEvent(li, 'label', 'dblclick', () => editingTodo(todo, li));
         addEvent(li, '.edit', 'keyup', e => {
             if (e.key === 'Enter') updateTodo({ ...todo, title: e.target.value }, li)
@@ -90,7 +68,6 @@ const createApp = rootElement => {
             }
         });
         addEvent(li, '.edit', 'blur', e => updateTodo({ ...todo, title: e.target.value }, li));
-
         return li;
     }
 
@@ -109,8 +86,10 @@ const createApp = rootElement => {
         $count.innerHTML = `
             <strong>${todoStore.all('active').length}</strong>
             ${todoStore.all('active').length === 1 ? 'item' : 'items'} left
-		`;
+        `;
     }
+
+    todoStore.subscribe(render);
 };
 
 const app = createApp(document.body.querySelector('.todoapp'));
