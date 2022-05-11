@@ -1,4 +1,4 @@
-export const addEvent = (el, selector, event, handler) =>{
+export const addEvent = (el, selector, event, handler) => {
     el.querySelector(selector).addEventListener(event, e => handler(e));
 }
 

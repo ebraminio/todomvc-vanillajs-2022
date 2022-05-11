@@ -1,61 +1,76 @@
-export const TodoStore = class extends EventTarget {
-    constructor(localStorageKey) {
-        super();
-        this.localStorageKey = localStorageKey;
-        this._readStorage();
-        // handle if todos are edited in another window
-        window.addEventListener("storage", () => {
-            this._readStorage();
-            this._save();
-        }, false);
+export const createTodoStore = (localStorageKey) => {
+    'use strict';
+
+    let todos = [];
+    const eventTarget = new EventTarget();
+    readStorage();
+
+    // handle if todos are edited in another window
+    window.addEventListener("storage", () => {
+        readStorage();
+        save();
+    }, false);
+
+    function readStorage() {
+        todos = JSON.parse(window.localStorage.getItem(localStorageKey) || '[]');
     }
-    _readStorage () {
-        this.todos = JSON.parse(window.localStorage.getItem(this.localStorageKey) || '[]');
+
+    function save() {
+        window.localStorage.setItem(localStorageKey, JSON.stringify(todos));
+        eventTarget.dispatchEvent(new CustomEvent('save'));
     }
-    _save() {
-        window.localStorage.setItem(this.localStorageKey, JSON.stringify(this.todos));
-        this.dispatchEvent(new CustomEvent('save'));
-    }
-    // GETTER methods
-    all (viewFilter) {
+
+    function all(viewFilter) {
         if (viewFilter === 'active') {
-            return this.todos.filter(todo => !todo.completed);
+            return todos.filter(todo => !todo.completed);
         }
         if (viewFilter === 'completed') {
-            return this.todos.filter(todo => todo.completed);
+            return todos.filter(todo => todo.completed);
         }
-        return this.todos;
+        return todos;
     }
-    hasCompleted () {
-        return this.todos.some(todo => todo.completed);
+
+    function hasCompleted() {
+        return todos.some(todo => todo.completed);
     }
-    isAllCompleted () {
-        return this.todos.every(todo => todo.completed);
+
+    function isAllCompleted() {
+        return todos.every(todo => todo.completed);
     }
-    // MUTATE methods
-    add (todo) {
-        this.todos.push({ title: todo.title, completed: false, id: "id_" + Date.now() });
-        this._save();
+
+    function add(todo) {
+        todos.push({ title: todo.title, completed: false, id: "id_" + Date.now() });
+        save();
     }
-    remove ({ id }) {
-        this.todos = this.todos.filter(todo => todo.id !== id);
-        this._save();
+
+    function remove({ id }) {
+        todos = todos.filter(todo => todo.id !== id);
+        save();
     }
-    toggle ({ id }) {
-        this.todos = this.todos.map(todo => todo.id === id ? { ...todo, completed: !todo.completed } : todo);
-        this._save();
+
+    function toggle({ id }) {
+        todos = todos.map(todo => todo.id === id ? { ...todo, completed: !todo.completed } : todo);
+        save();
     }
-    clearCompleted () {
-        this.todos = this.todos.filter(todo => !todo.completed);
-        this._save();
+
+    function clearCompleted() {
+        todos = todos.filter(todo => !todo.completed);
+        save();
     }
-    update (todo) {
-        this.todos = this.todos.map(t => t.id === todo.id ? todo : t);
-        this._save();
+
+    function update(todo) {
+        todos = todos.map(t => t.id === todo.id ? todo : t);
+        save();
     }
-    toggleAll () {
-        const completed = !this.hasCompleted() || !this.isAllCompleted();
-        this.todos = this.todos.map(todo => ({ ...todo, completed }));
-        this._save();
+
+    function toggleAll() {
+        const completed = !hasCompleted() || !isAllCompleted();
+        todos = todos.map(todo => ({ ...todo, completed }));
+        save();
+    }
+
+    return {
+        all, add, remove, toggle, hasCompleted, isAllCompleted, clearCompleted, update, toggleAll,
+        addEventListener: eventTarget.addEventListener.bind(eventTarget)
     }
 }
